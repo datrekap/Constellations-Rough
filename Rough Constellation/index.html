@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memorial Constellation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Remembrance Constellation</h1>
+        <div class="memory-count">Memories shared: <span id="memoryCount">0</span></div>
+        
+        <div class="questions" id="questionButtons">
+            <button class="question-btn active" data-index="0">Question 1</button>
+            <button class="question-btn" data-index="1">Question 2</button>
+            <button class="question-btn" data-index="2">Question 3</button>
+        </div>
+        
+        <div class="input-section">
+            <h2 class="current-question" id="currentQuestion"></h2>
+            <textarea id="memoryInput" placeholder="Share your memory..."></textarea>
+            <button class="share-btn" id="shareButton">Share Memory</button>
+        </div>
+        
+        <div class="constellation" id="constellation">
+            <div class="zone-labels">
+               <!-- <div class="zone-label">Memories & Traditions</div>
+                <div class="zone-label">Life's Blessings</div>
+                <div class="zone-label">Unspoken Words</div> -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            "What do you do to remember your loved ones?",
+            "What's one way your loved one made your life better?",
+            "What's one thing you wish you could say to your loved one now?"
+        ];
+
+        const zones = [
+            { xMin: 5, xMax: 30 },    // Left zone
+            { xMin: 35, xMax: 65 },   // Middle zone
+            { xMin: 70, xMax: 95 }    // Right zone
+        ];
+
+        let currentQuestionIndex = 0;
+        let memories = [];
+
+        // DOM Elements
+        const questionButtons = document.querySelectorAll('.question-btn');
+        const currentQuestionEl = document.getElementById('currentQuestion');
+        const memoryInput = document.getElementById('memoryInput');
+        const shareButton = document.getElementById('shareButton');
+        const constellation = document.getElementById('constellation');
+        const memoryCountEl = document.getElementById('memoryCount');
+
+        // Initialize
+        function init() {
+            updateQuestion();
+            attachEventListeners();
+        }
+
+        function attachEventListeners() {
+            // Question button clicks
+            questionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    currentQuestionIndex = parseInt(button.dataset.index);
+                    updateQuestion();
+                    updateStars();
+                });
+            });
+
+            // Share button click
+            shareButton.addEventListener('click', addMemory);
+        }
+
+        function updateQuestion() {
+            currentQuestionEl.textContent = questions[currentQuestionIndex];
+            
+            // Update active button
+            questionButtons.forEach((button, index) => {
+                button.classList.toggle('active', index === currentQuestionIndex);
+            });
+        }
+
+        function generateStarPosition(questionIndex) {
+            const zone = zones[questionIndex];
+            return {
+                x: Math.random() * (zone.xMax - zone.xMin) + zone.xMin,
+                y: Math.random() * 80 + 10
+            };
+        }
+
+        function addMemory() {
+            const text = memoryInput.value.trim();
+            if (!text) return;
+
+            const memory = {
+                id: Date.now(),
+                text: text,
+                position: generateStarPosition(currentQuestionIndex),
+                questionIndex: currentQuestionIndex
+            };
+
+            memories.push(memory);
+            memoryInput.value = '';
+            createStar(memory);
+            updateMemoryCount();
+        }
+
+        function createStar(memory) {
+            const star = document.createElement('div');
+            star.className = 'star new';
+            star.innerHTML = '★';
+            star.style.left = `${memory.position.x}%`;
+            star.style.top = `${memory.position.y}%`;
+            
+            // Add hover events
+            star.addEventListener('mouseenter', () => showTooltip(memory, star));
+            star.addEventListener('mouseleave', hideTooltip);
+            
+            constellation.appendChild(star);
+            
+            // Remove new animation class after animation
+            setTimeout(() => {
+                star.classList.remove('new');
+            }, 2000);
+
+            updateStars();
+        }
+
+        function showTooltip(memory, starElement) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            
+            const questionText = document.createElement('div');
+            questionText.className = 'tooltip-question';
+            questionText.textContent = questions[memory.questionIndex];
+            
+            const memoryText = document.createElement('div');
+            memoryText.textContent = memory.text;
+            
+            //  // OLD CODE With memories chosiwng while hoverng tooltip.appendChild(questionText);
+            tooltip.appendChild(memoryText);
+            
+            // Position tooltip above the star
+            tooltip.style.left = `${memory.position.x}%`;
+            tooltip.style.top = `${memory.position.y + 8}%`;
+            
+            constellation.appendChild(tooltip);
+        }
+
+        function hideTooltip() {
+            const tooltip = document.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+        }
+
+        function updateStars() {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.classList.toggle('dimmed', 
+                    parseInt(star.dataset.questionIndex) !== currentQuestionIndex);
+            });
+        }
+
+        function updateMemoryCount() {
+            memoryCountEl.textContent = memories.length;
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
